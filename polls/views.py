@@ -11,14 +11,20 @@ def base_queryset():
     The queryset used by the index view, detail view, and results view.
     Only show questions that have been published and have choices.
     """
-    return Question.objects.filter(pub_date__lte=timezone.now(), choice__isnull=False)
+    query_set = Question.objects.filter(pub_date__lte=timezone.now())
+    if query_set.count() > 0:
+        if Choice.objects.filter(id=query_set[0].id).count() > 0:
+            return query_set
+    return Question.objects.none()
 
 class IndexView(generic.ListView):
     template_name = 'polls/index.html'
     context_object_name = 'latest_question_list'
 
     def get_queryset(self):
-        return base_queryset().order_by('-pub_date')[:5]
+        query_set = base_queryset()
+
+        return query_set.order_by('-pub_date')[:5]
 
 class DetailView(generic.DetailView):
     model = Question
